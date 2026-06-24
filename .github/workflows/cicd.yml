@@ -1,0 +1,78 @@
+name: CI-CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+
+# ✅ Step 1: BUILD
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Build App
+        run: |
+          echo "Building app..."
+          mkdir build
+          echo "version-1" > build/app.txt
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-build
+          path: build/
+
+# ✅ Step 2: DEV Deployment (auto)
+  deploy-dev:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: Development
+
+    steps:
+      - name: Download Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: app-build
+
+      - name: Deploy to DEV
+        run: |
+          echo "Deploying to DEV..."
+          cat app.txt
+
+# ✅ Step 3: UAT Deployment (approval required)
+  deploy-uat:
+    needs: deploy-dev
+    runs-on: ubuntu-latest
+    environment: UAT
+
+    steps:
+      - name: Download Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: app-build
+
+      - name: Deploy to UAT
+        run: |
+          echo "Deploying to UAT..."
+          cat app.txt
+
+# ✅ Step 4: PROD Deployment (approval required)
+  deploy-prod:
+    needs: deploy-uat
+    runs-on: ubuntu-latest
+    environment: Prod
+
+    steps:
+      - name: Download Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: app-build
+
+      - name: Deploy to PROD
+        run: |
+          echo "Deploying to PROD..."
+          cat app.txt
